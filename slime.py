@@ -204,8 +204,8 @@ def dynamics():
 		slime2_vel[0] = 0
 	else:
 		pass
-	if canvas.coords(ball)[1] <= 0:
-		ball_vel[1] = - ball_vel[1]
+	#if canvas.coords(ball)[1] <= 0:
+		#ball_vel[1] = -0.9*ball_vel[1]
 	
 	if collide == False:
 		if (canvas.coords(ball)[2]<=(WIDTH/2.)):
@@ -229,7 +229,7 @@ def dynamics():
 				canvas.itemconfigure(score2_label,text=str(score2))
 			if (canvas.coords(ball)[3]>=HEIGHT):
 				BOUNCE_L = True
-				ball_vel[1] = -1.*ball_vel[1]
+				ball_vel[1] = -.9*ball_vel[1]
 			if (canvas.coords(ball)[3]>=(HEIGHT-1.5*SLIME_R) and canvas.coords(ball)[0]==WIDTH/2.):
 				reset_ball(RIGHT)
 				score2 += 1
@@ -254,7 +254,7 @@ def dynamics():
 				canvas.itemconfigure(score1_label,text=str(score1))
 			if (canvas.coords(ball)[3]>=HEIGHT):
 				BOUNCE_R = True
-				ball_vel[1] = -1.*ball_vel[1]
+				ball_vel[1] = -.9*ball_vel[1]
 			if (canvas.coords(ball)[3]>=(HEIGHT-1.5*SLIME_R) and canvas.coords(ball)[0]==WIDTH/2.):
 				reset_ball(LEFT)
 				score1 += 1
@@ -267,10 +267,10 @@ def dynamics():
         
 
 	if canvas.coords(ball)[2] >= WIDTH:
-	    ball_vel[0] = - ball_vel[0]
+	    ball_vel[0] = -0.9*ball_vel[0]
 
 	if canvas.coords(ball)[0] <= 0:
-	    ball_vel[0] = - ball_vel[0]
+	    ball_vel[0] = -0.9*ball_vel[0]
 
 	canvas.after(10,dynamics)
 
