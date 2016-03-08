@@ -27,6 +27,20 @@
 # Simon's game can be found here: https://github.com/slmouradian/pong
 # Also on github.
 #
+# ### HOW TO PLAY ###
+# -----------------------------------
+# ACTION   | LEFT SLIME | RIGHT SLIME|
+# -----------------------------------
+# JUMP     |     W      |      I     |
+# MV LEFT  |     A      |      J     |
+# MV RIGHT |     D      |      L     |
+# -----------------------------------
+#
+# As in tennis you are allowed one bounce of the ball in your 'court' (half)
+# after this, if the ball touches the floor of your court, your opponent scores
+# a point and vice versa. The net is mainly cosmetic at this stage, and simply
+# divides the courts.
+#
 # Please enjoy! 
 #########
 
