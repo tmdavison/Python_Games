@@ -17,7 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 # ### ABOUT THE GAME ###
-
+#
+# NB This is written for python 2.7!
+#
 # This is a simple recreation of the popular slime volleyball game, which
 # can be found here: http://slimegames.eu/ . However, none of the same code
 # was used and everything was reverse engineered from the memories of 
