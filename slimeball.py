@@ -50,81 +50,91 @@ from Tkinter import *
 import numpy as np
 import string
 import random
+import slimeball_levels as slv
 
-sounds_enabled = False
-try:
-    from pygame import mixer
-    sounds_enabled = True
-except:
-    pass
 
-WIDTH = 1100
-HEIGHT = 500
-BALL_RADIUS = 14
+WIDTH = 1100.
+HEIGHT = 500.
+BALL_RADIUS = 14.
 BALL_R = BALL_RADIUS
-SLIME_R = 40
-BALL_MASS = 15
-SLIME_MASS = 30
+SLIME_R = 40.
+BALL_MASS = 15.
+SLIME_MASS = 30.
 
-# Red brick: Largest brick
-BRICK_R_r   = 60
+slv.initialise_levels(WIDTH,HEIGHT,BALL_R,SLIME_R,BALL_MASS,SLIME_MASS)
+"""
+# Red brick: Largest ball
+BRICK_R_r   = 60.
 BRICK_R_m   = 600
 BRICK_R_COL = 'red'
-BRICK_R_hp  = 5
+BRICK_R_hp  = 5.
 
-# Blue brick: Smaller brick
-BRICK_B_r   = 50   
-BRICK_B_m   = 400
+# Blue brick: Smaller ball
+BRICK_B_r   = 50.   
+BRICK_B_m   = 400.
 BRICK_B_COL = 'blue'
-BRICK_B_hp  = 10
+BRICK_B_hp  = 10.
 
-# Magenta brick: Small brick but rotated 90 degrees to the others
-BRICK_M_r   = 40   
-BRICK_M_m   = 200
+# Magenta brick: Smallest ball. Most HP.
+BRICK_M_r   = 40.   
+BRICK_M_m   = 200.
 BRICK_M_COL = 'magenta'
-BRICK_M_hp  = 15
+BRICK_M_hp  = 15.
 
 LEFT = True
 RIGHT = False
-
+"""
 LINE_COLOUR='black'
 BALL_COLOUR='black'
 SLIME_COLOUR='black'
-slime_acc = 10
+slime_acc = 10.
 
-def level_1():
-	global bricks, redbrick1,redbrick2,bricks
+"""
+def level_1a():
+	global bricks, redbrick1,redbrick2,bricks,bricks_original
 
-	redbrick1 = canvas.create_oval(WIDTH-2.*BRICK_R_r, HEIGHT/4. + BRICK_R_r,
-										  WIDTH,HEIGHT/4. - BRICK_R_r, 
+	rb1pos    = [WIDTH/2.-BRICK_R_r,         HEIGHT/4.]
+	rb2pos    = [WIDTH/2.-BRICK_R_r,      3.*HEIGHT/4.]
+	rb2pos    = [3.*WIDTH/4.-2.*BRICK_R_r,   HEIGHT/2.]
+	redbrick1 = canvas.create_oval(rb1pos[0]-BRICK_R_r,rb1pos[1]+BRICK_R_r,rb1pos[0]+BRICK_R_r,rb1pos[1]-BRICK_R_r, 
                                           fill=BRICK_R_COL)
-	redbrick2 = canvas.create_oval(WIDTH-2.*BRICK_R_r, 3.*HEIGHT/4. + BRICK_R_r,
-										  WIDTH,3.*HEIGHT/4. - BRICK_R_r, 
+	redbrick2 = canvas.create_oval(rb2pos[0]-BRICK_R_r,rb2pos[1]+BRICK_R_r,rb2pos[0]+BRICK_R_r,rb2pos[1]-BRICK_R_r, 
                                           fill=BRICK_R_COL)
-	blubrick1 = canvas.create_oval(2.*WIDTH/3.-2.*BRICK_B_r, HEIGHT/2. + BRICK_B_r,
-										  2.*WIDTH/3.,HEIGHT/2. - BRICK_B_r, 
-                                          fill=BRICK_B_COL)
-	magbrick1 = canvas.create_oval(WIDTH/2.-2.*BRICK_M_r, HEIGHT/2. + BRICK_M_r,
-										  WIDTH/2.,HEIGHT/2. - BRICK_M_r, 
-                                          fill=BRICK_M_COL)
-	redb1 = {'radius': BRICK_R_r,'mass': BRICK_R_m, 'tag': redbrick1,'xvel':random.randrange(-1,1),'yvel':0.,'collide':False,'ballcol':False,'HP':BRICK_R_hp}
-	redb2 = {'radius': BRICK_R_r,'mass': BRICK_R_m, 'tag': redbrick2,'xvel':random.randrange(-1,1),'yvel':0.,'collide':False,'ballcol':False,'HP':BRICK_R_hp}
-	blub1 = {'radius': BRICK_B_r,'mass': BRICK_B_m, 'tag': blubrick1,'xvel':0.,'yvel':random.randrange(-5,5),'collide':False,'ballcol':False,'HP':BRICK_B_hp}
-	magb1 = {'radius': BRICK_M_r,'mass': BRICK_M_m, 'tag': magbrick1,'xvel':random.randrange(-5,5),'yvel':random.randrange(-5,5),'collide':False,'ballcol':False,'HP':BRICK_M_hp}
-	bricks  = [redb1,redb2,blub1,magb1]
-
+	redbrick3 = canvas.create_oval(rb3pos[0]-BRICK_R_r,rb3pos[1]+BRICK_R_r,rb3pos[0]+BRICK_R_r,rb3pos[1]-BRICK_R_r, 
+                                          fill=BRICK_R_COL)
+	redb1 = {'radius': BRICK_R_r,'mass': BRICK_R_m, 'tag': redbrick1,'xvel':0.,'yvel':0.,'collide':False,'ballcol':False,'HP':BRICK_R_hp,
+					'color':'red','start_pos': rb1pos}
+	redb2 = {'radius': BRICK_R_r,'mass': BRICK_R_m, 'tag': redbrick2,'xvel':0.,'yvel':0.,'collide':False,'ballcol':False,'HP':BRICK_R_hp,
+					'color':'red','start_pos': rb2pos}
+	redb3 = {'radius': BRICK_R_r,'mass': BRICK_R_m, 'tag': redbrick2,'xvel':0.,'yvel':0.,'collide':False,'ballcol':False,'HP':BRICK_R_hp,
+					'color':'red','start_pos': rb2pos}
+	bricks  = [redb1,redb2,redb3]
+	bricks_original  = [redb1,redb2,redb3]
+"""
 def ball_bbox(ball_pos):
     return ball_pos[0]-BALL_RADIUS, ball_pos[1]-BALL_RADIUS, ball_pos[0]+BALL_RADIUS, ball_pos[1]+BALL_RADIUS
 
-def reset_ball(direction):
-    global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2
-    ball_pos = [WIDTH/4., HEIGHT/2]
-    canvas.coords(ball, ball_bbox(ball_pos))
-    m1 = SLIME_MASS
-    m2 = BALL_MASS
-    canvas.coords(slime,WIDTH/4.-SLIME_R,HEIGHT-SLIME_R,WIDTH/4.+SLIME_R,HEIGHT+SLIME_R)
-    slime_vel = [0.,0,]
-    ball_vel = [0,0]
+def brick_bbox(brick_pos,BRICK):
+	return brick_pos[0]-BRICK['radius'], brick_pos[1]-BRICK['radius'], brick_pos[0]+BRICK['radius'], brick_pos[1]+BRICK['radius']
+
+def reset_ball():
+	global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2
+	ball_pos = [WIDTH/4., HEIGHT/2]
+	canvas.coords(ball, ball_bbox(ball_pos))
+	canvas.coords(slime,WIDTH/4.-SLIME_R,HEIGHT-SLIME_R,WIDTH/4.+SLIME_R,HEIGHT+SLIME_R)
+	slime_vel = [0.,0,]
+	ball_vel = [0,0]
+	m1 = SLIME_MASS
+	m2 = BALL_MASS
+
+def reset_game():
+	global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks
+	canvas.delete('all')
+	new_game()
+	draw_movable_items()
+	draw_scores()
+	reset_ball()
+	bricks = slv.level_3(canvas)
 
 def draw_movable_items():
     global ball, ball_pos, slime
@@ -135,12 +145,10 @@ def draw_movable_items():
 def new_game():
     global slime_vel
     global score, score_label
-    if sounds_enabled:
-        new_game_sound.play()
     slime_vel = [0.,0.]
     score = 0
     canvas.itemconfigure(score_label,text=str(score))
-    reset_ball(LEFT)
+    reset_ball()
 
 def find_centre(coords):
 	x0 = coords[0]
@@ -180,13 +188,6 @@ def dynamics():
 	
 	canvas.move(slime,slime_vel[0],slime_vel[1])
 	canvas.move(ball,ball_vel[0],ball_vel[1])
-	for BRICK in bricks:
-		if BRICK['HP'] == 0:
-			canvas.delete(BRICK['tag'])
-			bricks.remove(BRICK)
-			score += 2
-			canvas.itemconfigure(score_label,text=str(score))
-		canvas.move(BRICK['tag'],BRICK['xvel'],BRICK['yvel'])
 	
 	if canvas.coords(slime)[3]>HEIGHT+SLIME_R:
 		x0 = canvas.coords(slime)[0]
@@ -233,8 +234,17 @@ def dynamics():
 		ball_vel[1]   += 10.*10.e-3
 	
 	for BRICK in bricks:
-		O                  = np.array(find_centre(canvas.coords(BRICK['tag'])))
-		OB                 = np.array(find_centre(canvas.coords(ball)))
+		O  = np.array(find_centre(canvas.coords(BRICK['tag'])))
+		OS = np.array(find_centre(canvas.coords(slime)))
+		mag = np.linalg.norm(O-OS)
+		if mag <= (SLIME_R+BRICK['radius']):
+			reset_ball()
+			score -= 5
+			#if score < 0: game_over()
+
+	for BRICK in bricks:
+		O  = np.array(find_centre(canvas.coords(BRICK['tag'])))
+		OB = np.array(find_centre(canvas.coords(ball)))
 		mag = np.linalg.norm(O-OB)
 		if mag <= (BALL_R+BRICK['radius']) and BRICK['ballcol']==False:
 			oldv = [0.,0.]
@@ -246,6 +256,21 @@ def dynamics():
 			BRICK['ballcol'] = True
 			BRICK['HP']     -= 1
 			score += 1
+			if BRICK['color']=='blu':
+				BRICK['radius'] *= 1.1
+				canvas.coords(BRICK['tag'],brick_bbox(O,BRICK))
+
+			if BRICK['color']=='red':
+				BRICK['mass'] *= 1.5
+			
+			if BRICK['color']=='mag':
+				BRICK['mass'] *= .5
+			
+			if BRICK['color']=='cya':
+				BRICK['radius'] *= .9
+				BRICK['mass'] *= .9
+				canvas.coords(BRICK['tag'],brick_bbox(O,BRICK))
+			
 			canvas.itemconfigure(score_label,text=str(score))
 		else:
 			BRICK['ballcol'] = False
@@ -274,7 +299,7 @@ def dynamics():
 					obj['yvel']     = v2[1]
 					obj['collide']  = True
 					BRICK['collide']= True
-				if mag > (obj['radius']+BRICK['radius']):
+				elif mag > (obj['radius']+BRICK['radius']):
 					obj['collide']   = False
 					BRICK['collide'] = False
 
@@ -287,6 +312,13 @@ def dynamics():
 			BRICK['yvel'] = -1.*BRICK['yvel']
 		elif canvas.coords(BRICK['tag'])[3]>= HEIGHT:
 			BRICK['yvel'] = -1.*BRICK['yvel']
+	for BRICK in bricks:
+		canvas.move(BRICK['tag'],BRICK['xvel'],BRICK['yvel'])
+		if BRICK['HP'] == 0:
+			canvas.delete(BRICK['tag'])
+			bricks.remove(BRICK)
+			score += 10
+			canvas.itemconfigure(score_label,text=str(score))
 
 
 	if canvas.coords(ball)[2] >= WIDTH:
@@ -315,7 +347,7 @@ def KeyPressed(event):
         else:
             pass
     elif event.char == 'r':
-		reset_ball(LEFT)
+		reset_game()
 
 
 def KeyReleased(event):
@@ -352,15 +384,13 @@ frame.bind('<KeyRelease>', KeyReleased)
 
 # Draw the ball and slimes
 draw_movable_items()
-level_1()
 
 resetButton = Button(frame, text ="Reset", command = new_game)
 resetButton.pack()
 
-if sounds_enabled:
-    load_sounds()
 draw_scores()
 new_game()
+reset_game()
 
 dynamics()
 frame.mainloop()
