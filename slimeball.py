@@ -128,13 +128,27 @@ def reset_ball():
 	m2 = BALL_MASS
 
 def reset_game():
-	global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks
-	canvas.delete('all')
-	new_game()
-	draw_movable_items()
-	draw_scores()
-	reset_ball()
-	bricks = slv.level_3(canvas)
+    global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks
+    canvas.delete('all')
+    new_game()
+    draw_movable_items()
+    draw_scores()
+    reset_ball()
+    bricks = slv.level_3(canvas)
+
+def game_over():
+    global score,bricks,canvas
+    canvas.delete('all')
+    canvas.create_text(WIDTH/2.,HEIGHT/2.,text='GAME OVER',font=('TkDefaultFont',80),fill=LINE_COLOUR)
+    score_end = canvas.create_text((WIDTH/2), 40, text='SCORE:{}'.format(score),
+                                          font=('TkDefaultFont',40),
+                                          fill=LINE_COLOUR)
+
+    canvas.create_text(HEIGHT/2.+80,WIDTH/2.+80,text='PRESS R TO RESTART',font=('TkDefaultFont',80),fill=LINE_COLOUR)
+    score = 0
+    return []
+
+
 
 def draw_movable_items():
     global ball, ball_pos, slime
@@ -232,7 +246,7 @@ def dynamics():
 		pass
 	else:
 		ball_vel[1]   += 10.*10.e-3
-	
+	print 'here'	
 	for BRICK in bricks:
 		O  = np.array(find_centre(canvas.coords(BRICK['tag'])))
 		OS = np.array(find_centre(canvas.coords(slime)))
@@ -240,8 +254,11 @@ def dynamics():
 		if mag <= (SLIME_R+BRICK['radius']):
 			reset_ball()
 			score -= 5
-			#if score < 0: game_over()
-
+			canvas.itemconfigure(score_label,text=str(score))
+			if score < 0: 
+				bricks = game_over()
+				print 'game over starts here'	
+				canvas.after_cancel(dynamics)
 	for BRICK in bricks:
 		O  = np.array(find_centre(canvas.coords(BRICK['tag'])))
 		OB = np.array(find_centre(canvas.coords(ball)))
@@ -264,7 +281,7 @@ def dynamics():
 				BRICK['mass'] *= 1.5
 			
 			if BRICK['color']=='mag':
-				BRICK['mass'] *= .5
+				BRICK['mass'] *= .65
 			
 			if BRICK['color']=='cya':
 				BRICK['radius'] *= .9
@@ -370,7 +387,7 @@ def draw_scores():
 
 # Create master frame and drawing canvas.
 frame = Tk()
-frame.title('Slime Brick')
+frame.title('Slime Ball')
 canvas = Canvas(frame, width=WIDTH, height=HEIGHT, bg='white')
 canvas.pack()
 
