@@ -128,25 +128,28 @@ def reset_ball():
 	m2 = BALL_MASS
 
 def reset_game():
-    global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks
+    global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks,lives
     canvas.delete('all')
     new_game()
     draw_movable_items()
     draw_scores()
+    #canvas.itemconfigure(score_label,text=str(score))
     reset_ball()
     bricks = slv.level_3(canvas)
+    lives  = 5
+    dynamics()
 
 def game_over():
-    global score,bricks,canvas
+    global score,canvas
     canvas.delete('all')
     canvas.create_text(WIDTH/2.,HEIGHT/2.,text='GAME OVER',font=('TkDefaultFont',80),fill=LINE_COLOUR)
     score_end = canvas.create_text((WIDTH/2), 40, text='SCORE:{}'.format(score),
                                           font=('TkDefaultFont',40),
                                           fill=LINE_COLOUR)
 
-    canvas.create_text(HEIGHT/2.+80,WIDTH/2.+80,text='PRESS R TO RESTART',font=('TkDefaultFont',80),fill=LINE_COLOUR)
+    canvas.create_text(WIDTH/2.,HEIGHT/2.+80,text='PRESS R TO RESTART',font=('TkDefaultFont',20),fill=LINE_COLOUR)
     score = 0
-    return []
+    return
 
 
 
@@ -158,10 +161,10 @@ def draw_movable_items():
                                           fill=SLIME_COLOUR,extent=180)
 def new_game():
     global slime_vel
-    global score, score_label
+    global score, score_label,lives
+    lives = 5
     slime_vel = [0.,0.]
     score = 0
-    canvas.itemconfigure(score_label,text=str(score))
     reset_ball()
 
 def find_centre(coords):
@@ -186,7 +189,8 @@ def collision(v1,x1,m1,v2,x2,m2):
 
 
 def dynamics():
-	global score,ball_pos, ball_vel,slime_vel,m1,m2,collide,jump,bricks
+	global score,ball_pos, ball_vel,slime_vel,m1,m2,collide,jump,bricks,lives,lives_label
+	endgame = False
 	bx,by      = find_centre(canvas.coords(ball))
 	sx,sy      = find_centre(canvas.coords(slime))
 	
@@ -246,7 +250,6 @@ def dynamics():
 		pass
 	else:
 		ball_vel[1]   += 10.*10.e-3
-	print 'here'	
 	for BRICK in bricks:
 		O  = np.array(find_centre(canvas.coords(BRICK['tag'])))
 		OS = np.array(find_centre(canvas.coords(slime)))
@@ -254,11 +257,13 @@ def dynamics():
 		if mag <= (SLIME_R+BRICK['radius']):
 			reset_ball()
 			score -= 5
+			lives -= 1
 			canvas.itemconfigure(score_label,text=str(score))
-			if score < 0: 
-				bricks = game_over()
-				print 'game over starts here'	
-				canvas.after_cancel(dynamics)
+			canvas.itemconfigure(lives_label,text='LIVES:{}'.format(lives))
+			if lives < 0: 
+			    game_over()
+			    endgame = True
+			    break
 	for BRICK in bricks:
 		O  = np.array(find_centre(canvas.coords(BRICK['tag'])))
 		OB = np.array(find_centre(canvas.coords(ball)))
@@ -335,6 +340,9 @@ def dynamics():
 			canvas.delete(BRICK['tag'])
 			bricks.remove(BRICK)
 			score += 10
+			if BRICK['color'] == 'mag':
+			    lives += 1
+			    canvas.itemconfigure(lives_label,text='LIVES:{}'.format(lives))
 			canvas.itemconfigure(score_label,text=str(score))
 
 
@@ -348,8 +356,10 @@ def dynamics():
 
 	if canvas.coords(ball)[0] <= 0:
 	    ball_vel[0] = -0.9*ball_vel[0]
-
-	canvas.after(10,dynamics)
+	if endgame:
+	   pass
+	else:
+	   canvas.after(10,dynamics)
 
 
 def KeyPressed(event):
@@ -379,8 +389,11 @@ def KeyReleased(event):
         pass
 
 def draw_scores():
-    global score_label
+    global score_label,lives_label,lives
     score_label = canvas.create_text((WIDTH/2)-40, 40, text='0',\
+                                          font=('TkDefaultFont',40),\
+                                          fill=LINE_COLOUR)
+    lives_label = canvas.create_text(140, 40, text='LIVES:{}'.format(lives),\
                                           font=('TkDefaultFont',40),\
                                           fill=LINE_COLOUR)
 
@@ -405,8 +418,8 @@ draw_movable_items()
 resetButton = Button(frame, text ="Reset", command = new_game)
 resetButton.pack()
 
-draw_scores()
 new_game()
+draw_scores()
 reset_game()
 
 dynamics()
