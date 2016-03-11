@@ -5,7 +5,7 @@ import random
 
 # Red brick: Largest ball, increases mass after each hit.
 BRICK_R_r   = 60.
-BRICK_R_m   = 600
+BRICK_R_m   = 100
 BRICK_R_COL = 'red'
 BRICK_R_hp  = 5.
 
