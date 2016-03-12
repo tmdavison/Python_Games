@@ -62,55 +62,12 @@ BALL_MASS = 15.
 SLIME_MASS = 30.
 
 slv.initialise_levels(WIDTH,HEIGHT,BALL_R,SLIME_R,BALL_MASS,SLIME_MASS)
-"""
-# Red brick: Largest ball
-BRICK_R_r   = 60.
-BRICK_R_m   = 600
-BRICK_R_COL = 'red'
-BRICK_R_hp  = 5.
-
-# Blue brick: Smaller ball
-BRICK_B_r   = 50.   
-BRICK_B_m   = 400.
-BRICK_B_COL = 'blue'
-BRICK_B_hp  = 10.
-
-# Magenta brick: Smallest ball. Most HP.
-BRICK_M_r   = 40.   
-BRICK_M_m   = 200.
-BRICK_M_COL = 'magenta'
-BRICK_M_hp  = 15.
-
-LEFT = True
-RIGHT = False
-"""
-LINE_COLOUR='black'
-BALL_COLOUR='black'
-SLIME_COLOUR='black'
+LINE_COLOUR = 'black'
+BALL_COLOUR = 'black'
+SLIME_COLOUR = 'black'
+INVUL_col = '#9900cc'
 slime_acc = 10.
 
-"""
-def level_1a():
-	global bricks, redbrick1,redbrick2,bricks,bricks_original
-
-	rb1pos    = [WIDTH/2.-BRICK_R_r,         HEIGHT/4.]
-	rb2pos    = [WIDTH/2.-BRICK_R_r,      3.*HEIGHT/4.]
-	rb2pos    = [3.*WIDTH/4.-2.*BRICK_R_r,   HEIGHT/2.]
-	redbrick1 = canvas.create_oval(rb1pos[0]-BRICK_R_r,rb1pos[1]+BRICK_R_r,rb1pos[0]+BRICK_R_r,rb1pos[1]-BRICK_R_r, 
-                                          fill=BRICK_R_COL)
-	redbrick2 = canvas.create_oval(rb2pos[0]-BRICK_R_r,rb2pos[1]+BRICK_R_r,rb2pos[0]+BRICK_R_r,rb2pos[1]-BRICK_R_r, 
-                                          fill=BRICK_R_COL)
-	redbrick3 = canvas.create_oval(rb3pos[0]-BRICK_R_r,rb3pos[1]+BRICK_R_r,rb3pos[0]+BRICK_R_r,rb3pos[1]-BRICK_R_r, 
-                                          fill=BRICK_R_COL)
-	redb1 = {'radius': BRICK_R_r,'mass': BRICK_R_m, 'tag': redbrick1,'xvel':0.,'yvel':0.,'collide':False,'ballcol':False,'HP':BRICK_R_hp,
-					'color':'red','start_pos': rb1pos}
-	redb2 = {'radius': BRICK_R_r,'mass': BRICK_R_m, 'tag': redbrick2,'xvel':0.,'yvel':0.,'collide':False,'ballcol':False,'HP':BRICK_R_hp,
-					'color':'red','start_pos': rb2pos}
-	redb3 = {'radius': BRICK_R_r,'mass': BRICK_R_m, 'tag': redbrick2,'xvel':0.,'yvel':0.,'collide':False,'ballcol':False,'HP':BRICK_R_hp,
-					'color':'red','start_pos': rb2pos}
-	bricks  = [redb1,redb2,redb3]
-	bricks_original  = [redb1,redb2,redb3]
-"""
 def ball_bbox(ball_pos):
     return ball_pos[0]-BALL_RADIUS, ball_pos[1]-BALL_RADIUS, ball_pos[0]+BALL_RADIUS, ball_pos[1]+BALL_RADIUS
 
@@ -118,14 +75,16 @@ def brick_bbox(brick_pos,BRICK):
 	return brick_pos[0]-BRICK['radius'], brick_pos[1]-BRICK['radius'], brick_pos[0]+BRICK['radius'], brick_pos[1]+BRICK['radius']
 
 def reset_ball():
-	global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2
-	ball_pos = [WIDTH/4., HEIGHT/2]
+	global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,invincibility
+	ball_pos = [WIDTH/2, HEIGHT-BALL_R]
 	canvas.coords(ball, ball_bbox(ball_pos))
 	canvas.coords(slime,WIDTH/4.-SLIME_R,HEIGHT-SLIME_R,WIDTH/4.+SLIME_R,HEIGHT+SLIME_R)
 	slime_vel = [0.,0,]
 	ball_vel = [0,0]
 	m1 = SLIME_MASS
 	m2 = BALL_MASS
+	invincibility = 300
+
 
 def reset_game():
     global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks,lives
@@ -135,7 +94,7 @@ def reset_game():
     draw_scores()
     #canvas.itemconfigure(score_label,text=str(score))
     reset_ball()
-    bricks = slv.level_3(canvas)
+    bricks = slv.level_4(canvas)
     lives  = 5
     dynamics()
 
@@ -189,11 +148,14 @@ def collision(v1,x1,m1,v2,x2,m2):
 
 
 def dynamics():
-	global score,ball_pos, ball_vel,slime_vel,m1,m2,collide,jump,bricks,lives,lives_label
+	global score,ball_pos, ball_vel,slime_vel,m1,m2,collide,jump,bricks,lives,lives_label,invincibility
 	endgame = False
 	bx,by      = find_centre(canvas.coords(ball))
 	sx,sy      = find_centre(canvas.coords(slime))
-	
+	if invincibility > 0: invincibility -= 1
+	if invincibility == 1:	
+		canvas.itemconfigure(slime,fill = SLIME_COLOUR)
+		
 	if sy < HEIGHT: 
 		jump = True
 	else:
@@ -214,6 +176,11 @@ def dynamics():
 		slime_vel[1] = 0.
 	if jump and canvas.coords(slime)[3]<(HEIGHT+SLIME_R): slime_vel[1] += 10.*10.e-3
 	
+	if score%50 == 0 and score>0:
+		lives += 1
+		score += 1
+		canvas.itemconfigure(score_label,text=str(score))
+		canvas.itemconfigure(lives_label,text='LIVES:{}'.format(lives))
 		
 	if canvas.coords(slime)[0]<=0:
 		y0 = canvas.coords(slime)[1]
@@ -254,16 +221,26 @@ def dynamics():
 		O  = np.array(find_centre(canvas.coords(BRICK['tag'])))
 		OS = np.array(find_centre(canvas.coords(slime)))
 		mag = np.linalg.norm(O-OS)
-		if mag <= (SLIME_R+BRICK['radius']):
-			reset_ball()
-			score -= 5
-			lives -= 1
-			canvas.itemconfigure(score_label,text=str(score))
-			canvas.itemconfigure(lives_label,text='LIVES:{}'.format(lives))
+		if mag <= (SLIME_R+BRICK['radius']) and invincibility == 0:
+			if BRICK['color'] == 'gry':
+				oldv = [0.,0.]
+				oldv[0] = BRICK['xvel']
+				oldv[1] = BRICK['yvel']
+				slime_vel,newv = collision(slime_vel,OS,m2,oldv,O,BRICK['mass'])
+				BRICK['xvel'] = newv[0]
+				BRICK['yvel'] = newv[1]
+	
+			else:
+				reset_ball()
+				score -= 5
+				lives -= 1
+				canvas.itemconfigure(slime,fill = INVUL_col)
+				canvas.itemconfigure(score_label,text=str(score))
+				canvas.itemconfigure(lives_label,text='LIVES:{}'.format(lives))
 			if lives < 0: 
-			    game_over()
-			    endgame = True
-			    break
+			   	game_over()
+			   	endgame = True
+			   	break
 	for BRICK in bricks:
 		O  = np.array(find_centre(canvas.coords(BRICK['tag'])))
 		OB = np.array(find_centre(canvas.coords(ball)))
@@ -277,7 +254,10 @@ def dynamics():
 			BRICK['yvel'] = newv[1]
 			BRICK['ballcol'] = True
 			BRICK['HP']     -= 1
-			score += 1
+			if BRICK['color'] == 'gry':
+				pass
+			else:
+				score += 1
 			if BRICK['color']=='blu':
 				BRICK['radius'] *= 1.1
 				canvas.coords(BRICK['tag'],brick_bbox(O,BRICK))
