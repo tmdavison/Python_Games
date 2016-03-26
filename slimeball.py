@@ -30,18 +30,15 @@
 # Also on github.
 #
 # ### HOW TO PLAY ###
-# -----------------------------------
-# ACTION   | LEFT SLIME | RIGHT SLIME|
-# -----------------------------------
-# JUMP     |     W      |      I     |
-# MV LEFT  |     A      |      J     |
-# MV RIGHT |     D      |      L     |
-# -----------------------------------
-#
-# As in tennis you are allowed one bounce of the ball in your 'court' (half)
-# after this, if the ball touches the floor of your court, your opponent scores
-# a point and vice versa. The net is mainly cosmetic at this stage, and simply
-# divides the courts.
+# -------------------------
+# |  ACTION   |   SLIME   |
+# -------------------------
+# |  JUMP     |     W     |
+# |  MV LEFT  |     A     |
+# |  MV RIGHT |     D     |
+# |  PAUSE    |     P     |
+# |  RESET    |     R     |
+# -------------------------
 #
 # Please enjoy! 
 #########
@@ -87,7 +84,7 @@ def reset_ball():
 
 
 def reset_game():
-    global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks,lives,N,paused,lvl
+    global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks,lives,N,paused,lvl,mm
     new_game()
     draw_movable_items()
     draw_scores()
@@ -95,6 +92,7 @@ def reset_game():
     #reset_ball()
     lives  = 5
     new_level(lvl)
+    mm = 1
     #dynamics()
 
 def game_over():
@@ -154,7 +152,7 @@ def collision(v1,x1,m1,v2,x2,m2):
 
 
 def dynamics():
-	global score,ball_pos, ball_vel,slime_vel,m1,m2,collide,jump,bricks,lives,lives_label,invincibility,paused
+	global score,ball_pos, ball_vel,slime_vel,m1,m2,collide,jump,bricks,lives,lives_label,invincibility,paused,mm
 	endgame = False
 	bx,by      = find_centre(canvas.coords(ball))
 	sx,sy      = find_centre(canvas.coords(slime))
@@ -265,7 +263,9 @@ def dynamics():
 			else:
 				score += 1
 			if BRICK['color']=='blu':
-				BRICK['radius'] *= 1.1
+				BRICK['xvel']   *= .1
+				BRICK['yvel']   *= .1
+				BRICK['mass']   *= 2.
 				canvas.coords(BRICK['tag'],brick_bbox(O,BRICK))
 
 			if BRICK['color']=='red':
@@ -276,7 +276,7 @@ def dynamics():
 			
 			if BRICK['color']=='cya':
 				BRICK['radius'] *= .9
-				BRICK['mass'] *= .9
+				BRICK['mass']   *= .9
 				canvas.coords(BRICK['tag'],brick_bbox(O,BRICK))
 			
 			canvas.itemconfigure(score_label,text=str(score))
@@ -468,6 +468,6 @@ canvas,bricks = slv.level_1(canvas)
 initialise_game()
 make_menu()
 initialise_game()
-
+mm = 1
 dynamics()
 frame.mainloop()
