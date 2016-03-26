@@ -76,7 +76,7 @@ def brick_bbox(brick_pos,BRICK):
 
 def reset_ball():
 	global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,invincibility
-	ball_pos = [WIDTH/2, HEIGHT-BALL_R]
+	ball_pos = [WIDTH/4., HEIGHT-BALL_R-SLIME_R]
 	canvas.coords(ball, ball_bbox(ball_pos))
 	canvas.coords(slime,WIDTH/4.-SLIME_R,HEIGHT-SLIME_R,WIDTH/4.+SLIME_R,HEIGHT+SLIME_R)
 	slime_vel = [0.,0,]
@@ -87,16 +87,15 @@ def reset_ball():
 
 
 def reset_game():
-    global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks,lives
-    canvas.delete('all')
+    global ball, ball_pos, ball_vel,slime_vel,slime,m1,m2,bricks,lives,N,paused,lvl
     new_game()
     draw_movable_items()
     draw_scores()
     #canvas.itemconfigure(score_label,text=str(score))
-    reset_ball()
-    bricks = slv.level_4(canvas)
+    #reset_ball()
     lives  = 5
-    dynamics()
+    new_level(lvl)
+    #dynamics()
 
 def game_over():
     global score,canvas
@@ -114,17 +113,24 @@ def game_over():
 
 def draw_movable_items():
     global ball, ball_pos, slime
-    ball_pos   = [WIDTH/2., HEIGHT/2.]
+    ball_pos = [WIDTH/4., HEIGHT-BALL_R-SLIME_R]
     ball       = canvas.create_oval(ball_bbox(ball_pos),fill=BALL_COLOUR)
     slime      = canvas.create_arc((WIDTH/4.)-SLIME_R,HEIGHT-SLIME_R,(WIDTH/4.)+SLIME_R,HEIGHT+SLIME_R, \
                                           fill=SLIME_COLOUR,extent=180)
 def new_game():
     global slime_vel
-    global score, score_label,lives
+    global score, score_label,lives,paused
+    paused = True
     lives = 5
     slime_vel = [0.,0.]
     score = 0
     reset_ball()
+
+def initialise_game():
+	global bricks,canvas,lvl
+	clear_bricks()
+	canvas,bricks = slv.level_1(canvas)
+	lvl = 1
 
 def find_centre(coords):
 	x0 = coords[0]
@@ -148,7 +154,7 @@ def collision(v1,x1,m1,v2,x2,m2):
 
 
 def dynamics():
-	global score,ball_pos, ball_vel,slime_vel,m1,m2,collide,jump,bricks,lives,lives_label,invincibility
+	global score,ball_pos, ball_vel,slime_vel,m1,m2,collide,jump,bricks,lives,lives_label,invincibility,paused
 	endgame = False
 	bx,by      = find_centre(canvas.coords(ball))
 	sx,sy      = find_centre(canvas.coords(slime))
@@ -282,29 +288,28 @@ def dynamics():
 		i = 0
 		for obj in bricks:
 			i+=1
-			if BRICK['tag'] == obj['tag']:
-				pass
-			else:	
-				O   = np.array(find_centre(canvas.coords(obj['tag'])))
-				mag = np.linalg.norm(O1-O)
-				if (mag <= (obj['radius']+BRICK['radius']) and BRICK['collide']==False):
-					oldv = [0.,0.]
-					v    = [0.,0.]
-					oldv[0] = BRICK['xvel']
-					oldv[1] = BRICK['yvel']
-					v[0]    = obj['xvel']
-					v[1]    = obj['yvel']
-					v2,newv = collision(v,O,obj['mass'],oldv,O1,BRICK['mass'])
-					BRICK['xvel']   = newv[0]
-					BRICK['yvel']   = newv[1]
-					obj['xvel']     = v2[0]
-					obj['yvel']     = v2[1]
-					obj['collide']  = True
-					BRICK['collide']= True
-				elif mag > (obj['radius']+BRICK['radius']):
-					obj['collide']   = False
-					BRICK['collide'] = False
-
+			O   = np.array(find_centre(canvas.coords(obj['tag'])))
+			mag = np.linalg.norm(O1-O)
+			#print mag/(obj['radius'] + BRICK['radius'])
+			if (mag <= (obj['radius']+BRICK['radius']) and BRICK['tag'] != obj['tag']): #and BRICK['collide']==False):
+				oldv = [0.,0.]
+				v    = [0.,0.]
+				oldv[0] = BRICK['xvel']
+				oldv[1] = BRICK['yvel']
+				v[0]    = obj['xvel']
+				v[1]    = obj['yvel']
+				v2,newv = collision(v,O,obj['mass'],oldv,O1,BRICK['mass'])
+				BRICK['xvel']   = newv[0]
+				BRICK['yvel']   = newv[1]
+				obj['xvel']     = v2[0]
+				obj['yvel']     = v2[1]
+				obj['collide']  = True
+				BRICK['collide']= True
+				canvas.move(BRICK['tag'],BRICK['xvel'],BRICK['yvel'])
+				canvas.move(obj['tag'],obj['xvel'],obj['yvel'])
+			elif mag > (obj['radius']+BRICK['radius']):
+				obj['collide']   = False
+				BRICK['collide'] = False
 	for BRICK in bricks:
 		if canvas.coords(BRICK['tag'])[2]>= WIDTH:
 			BRICK['xvel'] = -1.*BRICK['xvel']
@@ -317,12 +322,12 @@ def dynamics():
 	for BRICK in bricks:
 		canvas.move(BRICK['tag'],BRICK['xvel'],BRICK['yvel'])
 		if BRICK['HP'] == 0:
-			canvas.delete(BRICK['tag'])
-			bricks.remove(BRICK)
-			score += 10
 			if BRICK['color'] == 'mag':
 			    lives += 1
 			    canvas.itemconfigure(lives_label,text='LIVES:{}'.format(lives))
+			canvas.delete(BRICK['tag'])
+			bricks.remove(BRICK)
+			score += 10
 			canvas.itemconfigure(score_label,text=str(score))
 
 
@@ -336,15 +341,21 @@ def dynamics():
 
 	if canvas.coords(ball)[0] <= 0:
 	    ball_vel[0] = -0.9*ball_vel[0]
-	if endgame:
+	if endgame or paused:
 	   pass
 	else:
 	   canvas.after(10,dynamics)
 
 
 def KeyPressed(event):
-    global slime_vel,jump,collide
-    if event.char == 'a':
+    global slime_vel,jump,collide,paused
+    if event.char == 'p':
+		if paused:
+			paused = False
+		else:
+			paused = True
+		dynamics()
+    elif event.char == 'a':
         slime_vel[0] = -1.*slime_acc
     elif event.char == 'd':
         slime_vel[0] = slime_acc
@@ -354,6 +365,7 @@ def KeyPressed(event):
         else:
             pass
     elif event.char == 'r':
+		canvas.delete('all')
 		reset_game()
 
 
@@ -367,6 +379,8 @@ def KeyReleased(event):
         pass
     elif event.char == 'r':
         pass
+    elif event.char == 'p':
+        pass
 
 def draw_scores():
     global score_label,lives_label,lives
@@ -376,14 +390,66 @@ def draw_scores():
     lives_label = canvas.create_text(140, 40, text='LIVES:{}'.format(lives),\
                                           font=('TkDefaultFont',40),\
                                           fill=LINE_COLOUR)
+def quit():
+	canvas.quit()
+def make_menu():
+	global frame
+	menubar = Menu(frame)
+	frame.config(menu=menubar)
+	fileMenu = Menu(menubar)
+	fileMenu.add_command(label="level 1", command=lambda: new_level(1))
+	fileMenu.add_command(label="level 2", command=lambda: new_level(2))
+	fileMenu.add_command(label="level 3", command=lambda: new_level(3))
+	fileMenu.add_command(label="level 4", command=lambda: new_level(4))
+	fileMenu.add_command(label="level 5", command=lambda: new_level(5))
+	fileMenu.add_command(label="level 6", command=lambda: new_level(6))
+	fileMenu.add_command(label="level 7", command=lambda: new_level(7))
+	fileMenu.add_command(label="level 8", command=lambda: new_level(8))
+	fileMenu.add_command(label="Exit", command=quit)
+	menubar.add_cascade(label="Levels", menu=fileMenu)
 
+def clear_bricks():
+	global bricks
+	for BRICK in bricks:
+		canvas.delete(BRICK['tag'])
+
+def new_level(N):
+	global bricks,canvas,lvl
+	
+	clear_bricks()
+	if N == 1: 
+		canvas, bricks = slv.level_1(canvas)
+		lvl = 1
+	if N == 2: 
+		canvas, bricks = slv.level_2(canvas)
+		lvl = 2
+	if N == 3: 
+		canvas, bricks = slv.level_3(canvas)
+		lvl = 3
+	if N == 4: 
+		canvas, bricks = slv.level_4(canvas)
+		lvl = 4
+	if N == 5: 
+		canvas, bricks = slv.level_5(canvas)
+		lvl = 5
+	if N == 6: 
+		canvas, bricks = slv.level_6(canvas)
+		lvl = 6
+	if N == 7: 
+		canvas, bricks = slv.level_7(canvas)
+		lvl = 7
+	if N == 8: 
+		canvas, bricks = slv.level_8(canvas)
+		lvl = 8
+	dynamics()
+	return
 
 # Create master frame and drawing canvas.
 frame = Tk()
 frame.title('Slime Ball')
+
 canvas = Canvas(frame, width=WIDTH, height=HEIGHT, bg='white')
 canvas.pack()
-
 #canvas.create_line(WIDTH/2, HEIGHT-1.5*SLIME_R, WIDTH/2, HEIGHT, fill=LINE_COLOUR)
 #canvas.create_line(PAD_WIDTH,0, PAD_WIDTH,HEIGHT, fill=LINE_COLOUR)
 #canvas.create_line(WIDTH-PAD_WIDTH,0, WIDTH-PAD_WIDTH,HEIGHT, fill=LINE_COLOUR)
@@ -395,12 +461,13 @@ frame.bind('<KeyRelease>', KeyReleased)
 # Draw the ball and slimes
 draw_movable_items()
 
-resetButton = Button(frame, text ="Reset", command = new_game)
-resetButton.pack()
-
 new_game()
 draw_scores()
-reset_game()
+#reset_game()
+canvas,bricks = slv.level_1(canvas)
+initialise_game()
+make_menu()
+initialise_game()
 
 dynamics()
 frame.mainloop()
