@@ -226,13 +226,14 @@ def dynamics():
 		OS = np.array(find_centre(canvas.coords(slime)))
 		mag = np.linalg.norm(O-OS)
 		if mag <= (SLIME_R+BRICK['radius']) and invincibility == 0:
-			if BRICK['color'] == 'gry':
+			if BRICK['color'] == 'gry' or BRICK['color'] == 'wht':
 				oldv = [0.,0.]
 				oldv[0] = BRICK['xvel']
 				oldv[1] = BRICK['yvel']
 				slime_vel,newv = collision(slime_vel,OS,m2,oldv,O,BRICK['mass'])
 				BRICK['xvel'] = newv[0]
 				BRICK['yvel'] = newv[1]
+				canvas.move(BRICK['tag'],BRICK['xvel'],BRICK['yvel'])
 	
 			else:
 				reset_ball()
@@ -258,14 +259,15 @@ def dynamics():
 			BRICK['yvel'] = newv[1]
 			BRICK['ballcol'] = True
 			BRICK['HP']     -= 1
-			if BRICK['color'] == 'gry':
+			if BRICK['color'] == 'gry' or BRICK['color'] == 'wht':
 				pass
 			else:
 				score += 1
 			if BRICK['color']=='blu':
-				BRICK['xvel']   *= .1
-				BRICK['yvel']   *= .1
+				BRICK['xvel']   *= .2
+				BRICK['yvel']   *= .2
 				BRICK['mass']   *= 2.
+				canvas.move(BRICK['tag'],BRICK['xvel'],BRICK['yvel'])
 				canvas.coords(BRICK['tag'],brick_bbox(O,BRICK))
 
 			if BRICK['color']=='red':
@@ -405,6 +407,7 @@ def make_menu():
 	fileMenu.add_command(label="level 6", command=lambda: new_level(6))
 	fileMenu.add_command(label="level 7", command=lambda: new_level(7))
 	fileMenu.add_command(label="level 8", command=lambda: new_level(8))
+	fileMenu.add_command(label="level 9", command=lambda: new_level(9))
 	fileMenu.add_command(label="Exit", command=quit)
 	menubar.add_cascade(label="Levels", menu=fileMenu)
 
@@ -441,6 +444,9 @@ def new_level(N):
 	if N == 8: 
 		canvas, bricks = slv.level_8(canvas)
 		lvl = 8
+	if N == 9: 
+		canvas, bricks = slv.level_9(canvas)
+		lvl = 9
 	dynamics()
 	return
 
